@@ -164,8 +164,15 @@
         return;
       }
 
+      var subtotal = 0.50;
+      var total = subtotal;
       var details = {
-        total: {label: 'Total', amount: {currency: 'USD', value: '0.50'}}
+        total: {label: 'Total', amount: {currency: 'USD', value: total.toFixed(2)}},
+        displayItems: [
+        {
+          label: 'Sub-total',
+          amount: {currency: 'USD', value: subtotal.toFixed(2)}
+        }
       };
 
       var payment = new PaymentRequest(
