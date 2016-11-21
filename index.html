@@ -1,0 +1,264 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>PR Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css" />
+  </head>
+  <body>
+    <div class="container">
+    <div class="row" style="text-align: center;">
+      <h1>PR Demo</h1>
+      <button id="buy" class="button button-primary" onclick="buy()">BUY</button>
+    </div>
+    <div class="row">
+      <div class="tweleve columns">
+        <span id="msg"></span>
+      </div>
+    </div>
+  </body>
+  <script>
+    /**
+     * Show the msg to the user.
+     *
+     * @private
+     * @param {string} msg The message to print in the 'live output' section of the
+     * page.
+     */
+    function print(msg) {
+      var element = document.getElementById('msg');
+      element.innerHTML = element.innerHTML + '<br>' + msg;
+    }
+
+    /**
+     * Lets the user know that shipping is not possible.
+     *
+     * @private
+     * @param {string} message The message to print in the 'live output' section of
+     * the page.
+     * @param {PaymentDetails} details The details for payment.
+     * @param {function} callback The callback to invoke.
+     */
+    function cannotShip(message, details, callback) {
+      print(message);
+      delete details.shippingOptions;
+      callback(details);
+    }
+
+    /**
+     * Lets the user know that shipping is possible.
+     *
+     * @private
+     * @param {PaymentDetails} details The details for payment.
+     * @param {Array} shippingOptions The shipping options.
+     * @param {function} callback The callback to invoke.
+     */
+    function canShip(details, shippingOptions, callback) {
+      var selectedShippingOption;
+      for (var i in shippingOptions) {
+        if (shippingOptions[i].selected) {
+          selectedShippingOption = shippingOptions[i];
+        }
+      }
+
+      var subtotal = 0.50;
+      var total = subtotal;
+      if (selectedShippingOption) {
+        var shippingPrice = Number(selectedShippingOption.amount.value);
+        total = subtotal + shippingPrice;
+      }
+
+      details.shippingOptions = shippingOptions;
+      details.total = {
+        label: 'Total',
+        amount: {currency: 'USD', value: total.toFixed(2)}
+      };
+      details.displayItems = [
+        {
+          label: 'Sub-total',
+          amount: {currency: 'USD', value: subtotal.toFixed(2)}
+        }
+      ];
+      if (selectedShippingOption) {
+        details.displayItems.splice(0, 0, selectedShippingOption);
+      }
+
+      callback(details);
+    }
+
+    /**
+     * Converts the payment instrument into a JSON string.
+     *
+     * @private
+     * @param {PaymentResponse} instrument The instrument to convert.
+     * @return {string} The string representation of the instrument.
+     */
+    function instrumentToJsonString(instrument) {
+      var details = instrument.details;
+      if ('cardNumber' in details) {
+        details.cardNumber = 'XXXX-XXXX-XXXX-' + details.cardNumber.substr(12);
+      }
+
+      if ('cardSecurityCode' in details) {
+        details.cardSecurityCode = '***';
+      }
+
+      /* PaymentInsrument is an interface, but JSON.stringify works only on
+       * dictionaries. */
+      return JSON.stringify({
+        methodName: instrument.methodName,
+        details: details,
+        shippingAddress: addressToDictionary(instrument.shippingAddress),
+        shippingOption: instrument.shippingOption,
+        payerPhone: instrument.payerPhone,
+        payerEmail: instrument.payerEmail
+      }, undefined, 2);
+    }
+
+    /**
+     * Converts the shipping address into a dictionary.
+     *
+     * @private
+     * @param {PaymentAddress} address The address to convert.
+     * @return {object} The dictionary with address data.
+     */
+    function addressToDictionary(address) {
+      return {
+        recipient: address.recipient,
+        organization: address.organization,
+        addressLine: address.addressLine,
+        dependentLocality: address.dependentLocality,
+        city: address.city,
+        region: address.region,
+        postalCode: address.postalCode,
+        sortingCode: address.sortingCode,
+        country: address.country,
+        phone: address.phone
+      };
+    }
+
+    /**
+     * Converts the shipping address into a JSON string.
+     *
+     * @private
+     * @param {PaymentAddress} address The address to convert.
+     * @return {string} The string representation of the address.
+     */
+    function addressToJsonString(address) {
+      /* PaymentAddress is an interface, but JSON.stringify works only on
+       * dictionaries. */
+      return JSON.stringify(addressToDictionary(address));
+    }
+
+    /**
+     * Authorizes user's Android Pay for USD $0.50 plus shipping. Simulates credit
+     * card processing without talking to the server.
+     */
+    function buy() {
+      document.getElementById('msg').innerHTML = '';
+
+      if (!window.PaymentRequest) {
+        print('Web payments are not supported in this browser');
+        return;
+      }
+
+      var details = {
+        total: {label: 'Total', amount: {currency: 'USD', value: '0.50'}}
+      };
+
+      var payment = new PaymentRequest(
+        [
+          {
+            supportedMethods: ['https://android.com/pay'],
+            data: {
+              merchantName: 'PUT_YOUR_ANDROID_PAY_MERCHANT_NAME_HERE',
+              allowedCardNetworks: ['AMEX', 'MASTERCARD', 'VISA', 'DISCOVER'],
+              merchantId: 'PUT_YOUR_ANDROID_PAY_MERCHANT_ID_HERE',
+              paymentMethodTokenizationParameters: {
+                tokenizationType: 'GATEWAY_TOKEN',
+                parameters: {
+                  'gateway': 'stripe',
+                  'stripe:publishableKey': 'PUT_YOUR_STRIPE_PUBLISHABLE_KEY_HERE',
+                  'stripe:version': '2016-07-06'
+                }
+              }
+            }
+          },
+          {
+            supportedMethods: ['visa', 'mastercard', 'amex', 'discover', 'diners',
+                'jcb', 'unionpay']
+          }
+        ],
+        details,
+        {
+          requestShipping: true,
+          requestPayerPhone: true,
+          requestPayerEmail: true
+        });
+      payment.addEventListener('shippingaddresschange', function(evt) {
+        evt.updateWith(new Promise(function(resolve) {
+
+          print(addressToJsonString(payment.shippingAddress));
+
+          var shippingOptions = [{
+            id: 1234,
+            label: 'Canada Post Express',
+            amount: {currency: 'CAD', value: 9.99},
+            selected: true
+          }, {
+            id: 1235,
+            label: 'UPS Global Express',
+            amount: {currency: 'CAD', value: 11.99},
+            selected: false
+          }];
+          canShip(details, shippingOptions, resolve);
+
+          //cannotShip('Unable to calculate shipping options...', details, resolve);
+        }));
+      });
+
+      payment.addEventListener('shippingoptionchange', function(evt) {
+        evt.updateWith(new Promise(function(resolve) {
+          for (var i in details.shippingOptions) {
+            if ({}.hasOwnProperty.call(details.shippingOptions, i)) {
+              details.shippingOptions[i].selected =
+                  (details.shippingOptions[i].id === payment.shippingOption);
+            }
+          }
+
+          canShip(details, details.shippingOptions, resolve);
+        }));
+      });
+
+      var paymentTimeout = window.setTimeout(function() {
+        window.clearTimeout(paymentTimeout);
+        payment.abort().then(function() {
+          print('Payment timed out after 20 minutes.');
+        }).catch(function() {
+          print('Unable to abort, because the user is currently in the process ' +
+              'of paying.');
+        });
+      }, 20 * 60 * 1000);  /* 20 minutes */
+
+      payment.show()
+      .then(function(instrument) {
+        window.clearTimeout(paymentTimeout);
+
+        var simulationTimeout = window.setTimeout(function() {
+          window.clearTimeout(simulationTimeout);
+          instrument.complete('success').then(function() {
+            print(instrumentToJsonString(instrument));
+            print('Simulated credit card authorization');
+          }).catch(function(error) {
+            print(error);
+          });
+        }, 2 * 1000);  /* +2 seconds to simulate server latency. */
+
+      })
+      .catch(function(error) {
+        print('Could not charge user. ' + error);
+      });
+    }
+  </script>
+</html>
