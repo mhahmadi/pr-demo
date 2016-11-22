@@ -89,14 +89,14 @@
     }
 
     /**
-     * Converts the payment instrument into a JSON string.
+     * Converts the payment response into a JSON string.
      *
      * @private
-     * @param {PaymentResponse} instrument The instrument to convert.
-     * @return {string} The string representation of the instrument.
+     * @param {PaymentResponse} paymentResponse The response to convert.
+     * @return {string} The string representation of the payment response.
      */
-    function instrumentToJsonString(instrument) {
-      var details = instrument.details;
+    function paymentResponseToJsonString(paymentResponse) {
+      var details = paymentResponse.details;
       if ('cardNumber' in details) {
         details.cardNumber = 'XXXX-XXXX-XXXX-' + details.cardNumber.substr(12);
       }
@@ -105,15 +105,15 @@
         details.cardSecurityCode = '***';
       }
 
-      /* PaymentInsrument is an interface, but JSON.stringify works only on
+      /* PaymentResponse is an interface, but JSON.stringify works only on
        * dictionaries. */
       return JSON.stringify({
-        methodName: instrument.methodName,
+        methodName: paymentResponse.methodName,
         details: details,
-        shippingAddress: addressToDictionary(instrument.shippingAddress),
-        shippingOption: instrument.shippingOption,
-        payerPhone: instrument.payerPhone,
-        payerEmail: instrument.payerEmail
+        shippingAddress: addressToDictionary(paymentResponse.shippingAddress),
+        shippingOption: paymentResponse.shippingOption,
+        payerPhone: paymentResponse.payerPhone,
+        payerEmail: paymentResponse.payerEmail
       }, undefined, 2);
     }
 
@@ -249,13 +249,13 @@
       }, 20 * 60 * 1000);  /* 20 minutes */
 
       payment.show()
-      .then(function(instrument) {
+      .then(function(paymentResponse) {
         window.clearTimeout(paymentTimeout);
 
         var simulationTimeout = window.setTimeout(function() {
           window.clearTimeout(simulationTimeout);
-          instrument.complete('success').then(function() {
-            print(instrumentToJsonString(instrument));
+          paymentResponse.complete('success').then(function() {
+            print(paymentResponseToJsonString(paymentResponse));
             print('Simulated credit card authorization');
           }).catch(function(error) {
             print(error);
