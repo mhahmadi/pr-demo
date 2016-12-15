@@ -4,58 +4,41 @@
     <meta charset="utf-8">
     <title>PR Demo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css" />
-    <link rel="icon" type="image/png" href="favicon.ico">
   </head>
   <body>
-    <div class="container">
-    <div class="row" style="text-align: center;">
-      <h1>PR Demo</h1>
-      <button id="buy" class="button button-primary" onclick="buy()">BUY</button>
+    <div style="text-align: center;">
+      <h1>Payment Request</h1>
+      <button id="buy" onclick="buy()">BUY</button>
     </div>
-    <div class="row">
-      <div class="tweleve columns">
-        <span id="msg"></span>
-      </div>
-    </div>
+    <div id="msg"></div>
   </body>
   <script>
     /**
-     * Show the msg to the user.
-     *
+     * Prints the message on the page.
+     * @param {string} message
      * @private
-     * @param {string} msg The message to print in the 'live output' section of the
-     * page.
      */
-    function print(msg) {
+    function _print(message) {
       var element = document.getElementById('msg');
-      element.innerHTML = element.innerHTML + '<br>' + msg;
+      element.innerHTML += '<br>' + message;
     }
 
     /**
-     * Lets the user know that shipping is not possible.
-     *
-     * @private
-     * @param {string} message The message to print in the 'live output' section of
-     * the page.
-     * @param {PaymentDetails} details The details for payment.
+     * If shippingOptions is provided, sets 'shippingOptions' on payment details
+     * and updates 'total' as well as 'displayItems' to reflect the selected
+     * shipping option. Otherwise, removes 'shippingOptions' from the payment
+     * details. It then invokes the callback.
+     * @param {PaymentDetails} paymentDetails
+     * @param {Array} shippingOptions
      * @param {function} callback The callback to invoke.
+     * @private
      */
-    function cannotShip(message, details, callback) {
-      print(message);
-      delete details.shippingOptions;
-      callback(details);
-    }
+    function _updateShipping(paymentDetails, shippingOptions, callback) {
+      if (shippingOptions)
+        paymentDetails.shippingOptions = shippingOptions;
+      else
+        delete paymentDetails.shippingOptions;
 
-    /**
-     * Lets the user know that shipping is possible.
-     *
-     * @private
-     * @param {PaymentDetails} details The details for payment.
-     * @param {Array} shippingOptions The shipping options.
-     * @param {function} callback The callback to invoke.
-     */
-    function canShip(details, shippingOptions, callback) {
       var selectedShippingOption;
       for (var i in shippingOptions) {
         if (shippingOptions[i].selected) {
@@ -69,202 +52,108 @@
         var shippingPrice = Number(selectedShippingOption.amount.value);
         total = subtotal + shippingPrice;
       }
-
-      details.shippingOptions = shippingOptions;
-      details.total = {
+      paymentDetails.total = {
         label: 'Total',
         amount: {currency: 'USD', value: total.toFixed(2)}
       };
-      details.displayItems = [
+
+      paymentDetails.displayItems = [
         {
           label: 'Sub-total',
           amount: {currency: 'USD', value: subtotal.toFixed(2)}
         }
       ];
       if (selectedShippingOption) {
-        details.displayItems.splice(0, 0, selectedShippingOption);
+        paymentDetails.displayItems.splice(0, 0, selectedShippingOption);
       }
 
-      callback(details);
+      callback(paymentDetails);
     }
 
     /**
-     * Converts the payment response into a JSON string.
-     *
-     * @private
-     * @param {PaymentResponse} paymentResponse The response to convert.
-     * @return {string} The string representation of the payment response.
-     */
-    function paymentResponseToJsonString(paymentResponse) {
-      var details = paymentResponse.details;
-      if ('cardNumber' in details) {
-        details.cardNumber = 'XXXX-XXXX-XXXX-' + details.cardNumber.substr(12);
-      }
-
-      if ('cardSecurityCode' in details) {
-        details.cardSecurityCode = '***';
-      }
-
-      /* PaymentResponse is an interface, but JSON.stringify works only on
-       * dictionaries. */
-      return JSON.stringify({
-        methodName: paymentResponse.methodName,
-        details: details,
-        shippingAddress: addressToDictionary(paymentResponse.shippingAddress),
-        shippingOption: paymentResponse.shippingOption,
-        payerPhone: paymentResponse.payerPhone,
-        payerEmail: paymentResponse.payerEmail
-      }, undefined, 2);
-    }
-
-    /**
-     * Converts the shipping address into a dictionary.
-     *
-     * @private
-     * @param {PaymentAddress} address The address to convert.
-     * @return {object} The dictionary with address data.
-     */
-    function addressToDictionary(address) {
-      return {
-        recipient: address.recipient,
-        organization: address.organization,
-        addressLine: address.addressLine,
-        dependentLocality: address.dependentLocality,
-        city: address.city,
-        region: address.region,
-        postalCode: address.postalCode,
-        sortingCode: address.sortingCode,
-        country: address.country,
-        phone: address.phone
-      };
-    }
-
-    /**
-     * Converts the shipping address into a JSON string.
-     *
-     * @private
-     * @param {PaymentAddress} address The address to convert.
-     * @return {string} The string representation of the address.
-     */
-    function addressToJsonString(address) {
-      /* PaymentAddress is an interface, but JSON.stringify works only on
-       * dictionaries. */
-      return JSON.stringify(addressToDictionary(address));
-    }
-
-    /**
-     * Authorizes user's Android Pay for USD $0.50 plus shipping. Simulates credit
-     * card processing without talking to the server.
+     * Starts Payment Request.
      */
     function buy() {
       document.getElementById('msg').innerHTML = '';
 
       if (!window.PaymentRequest) {
-        print('Web payments are not supported in this browser');
+        _print('PaymentRequest not supported.');
         return;
       }
-
-      var subtotal = 0.50;
-      var total = subtotal;
-      var details = {
-        total: {label: 'Total', amount: {currency: 'USD', value: total.toFixed(2)}},
-        displayItems: [{
-          label: 'Sub-total',
-          amount: {currency: 'USD', value: subtotal.toFixed(2)}
-        }],
-      };
 
       var payment = new PaymentRequest(
         [
           {
-            supportedMethods: ['https://android.com/pay'],
-            data: {
-              merchantName: 'PUT_YOUR_ANDROID_PAY_MERCHANT_NAME_HERE',
-              allowedCardNetworks: ['AMEX', 'MASTERCARD', 'VISA', 'DISCOVER'],
-              merchantId: 'PUT_YOUR_ANDROID_PAY_MERCHANT_ID_HERE',
-              paymentMethodTokenizationParameters: {
-                tokenizationType: 'GATEWAY_TOKEN',
-                parameters: {
-                  'gateway': 'stripe',
-                  'stripe:publishableKey': 'PUT_YOUR_STRIPE_PUBLISHABLE_KEY_HERE',
-                  'stripe:version': '2016-07-06'
-                }
-              }
-            }
-          },
-          {
-            supportedMethods: ['visa', 'mastercard', 'amex', 'discover', 'diners',
-                'jcb', 'unionpay']
+            supportedMethods: ['visa', 'mastercard', 'amex', 'discover',
+                'diners', 'jcb', 'unionpay']
           }
         ],
-        details,
+        {
+          total: {label: 'Total', amount: {currency: 'USD', value: '.50'},
+          displayItems: [{
+            label: 'Sub-total',
+            amount: {currency: 'USD', value: '.50'}
+          }]
+        },
         {
           requestShipping: true,
           requestPayerPhone: true,
           requestPayerEmail: true
         });
+
       payment.addEventListener('shippingaddresschange', function(evt) {
         evt.updateWith(new Promise(function(resolve) {
-
-          print(addressToJsonString(payment.shippingAddress));
-
           var shippingOptions = [{
             id: 1234,
-            label: 'Canada Post Express',
-            amount: {currency: 'CAD', value: 9.99},
+            label: 'Foo Post Express',
+            amount: {currency: 'USD', value: '0.99'},
             selected: true
           }, {
             id: 1235,
-            label: 'UPS Global Express',
-            amount: {currency: 'CAD', value: 11.99},
+            label: 'Bar Post Express',
+            amount: {currency: 'USD', value: '1.99'},
             selected: false
           }];
-          canShip(details, shippingOptions, resolve);
 
-          //cannotShip('Unable to calculate shipping options...', details, resolve);
+          _updateShipping(payment.details, shippingOptions, resolve);
+          // Or reject by calling the following:
+          //_updateShipping(payment.details, undefined, reject);
         }));
       });
 
       payment.addEventListener('shippingoptionchange', function(evt) {
         evt.updateWith(new Promise(function(resolve) {
-          for (var i in details.shippingOptions) {
-            if ({}.hasOwnProperty.call(details.shippingOptions, i)) {
-              details.shippingOptions[i].selected =
-                  (details.shippingOptions[i].id === payment.shippingOption);
-            }
+          // Update the selected shipping option.
+          for (var i in payment.details.shippingOptions) {
+            payment.details.shippingOptions[i].selected =
+                (payment.details.shippingOptions[i].id ===
+                 payment.shippingOption);
           }
 
-          canShip(details, details.shippingOptions, resolve);
+          _updateShipping(payment.details, payment.details.shippingOptions,
+                          resolve);
         }));
       });
 
       var paymentTimeout = window.setTimeout(function() {
         window.clearTimeout(paymentTimeout);
         payment.abort().then(function() {
-          print('Payment timed out after 20 minutes.');
+          _print('Payment timed out after 20 minutes.');
         }).catch(function() {
-          print('Unable to abort, because the user is currently in the process ' +
-              'of paying.');
+          _print('Unable to abort, payment is in progress.');
         });
       }, 20 * 60 * 1000);  /* 20 minutes */
 
-      payment.show()
-      .then(function(paymentResponse) {
+      payment.show().then(function(paymentResponse) {
         window.clearTimeout(paymentTimeout);
 
-        var simulationTimeout = window.setTimeout(function() {
-          window.clearTimeout(simulationTimeout);
-          paymentResponse.complete('success').then(function() {
-            print(paymentResponseToJsonString(paymentResponse));
-            print('Simulated credit card authorization');
-          }).catch(function(error) {
-            print(error);
-          });
-        }, 2 * 1000);  /* +2 seconds to simulate server latency. */
-
-      })
-      .catch(function(error) {
-        print('Could not charge user. ' + error);
+        paymentResponse.complete('success').then(function() {
+          _print('Payment was successful.');
+        }).catch(function(error) {
+          _print(error);
+        });
+      }).catch(function(error) {
+        _print(error);
       });
     }
   </script>
