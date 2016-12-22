@@ -29,25 +29,15 @@
     }
 
     /**
-     * If shippingOptions is provided, sets 'shippingOptions' on payment details
-     * and updates 'total' as well as 'displayItems' to reflect the selected
-     * shipping option. Otherwise, removes 'shippingOptions' from the payment
-     * details. It then invokes the callback.
+     * Updates 'total' as well as 'displayItems'.
      * @param {PaymentDetails} paymentDetails
-     * @param {Array} shippingOptions
-     * @param {function} callback The callback to invoke.
      * @private
      */
-    function _updateShipping(paymentDetails, shippingOptions, callback) {
-      if (shippingOptions)
-        paymentDetails.shippingOptions = shippingOptions;
-      else
-        delete paymentDetails.shippingOptions;
-
+    function _updateDetails(paymentDetails) {
       var selectedShippingOption;
-      for (var i in shippingOptions) {
-        if (shippingOptions[i].selected) {
-          selectedShippingOption = shippingOptions[i];
+      for (var i in paymentDetails.shippingOptions) {
+        if (paymentDetails.shippingOptions[i].selected) {
+          selectedShippingOption = paymentDetails.shippingOptions[i];
         }
       }
 
@@ -71,8 +61,6 @@
       if (selectedShippingOption) {
         paymentDetails.displayItems.splice(0, 0, selectedShippingOption);
       }
-
-      callback(paymentDetails);
     }
 
     /**
@@ -86,6 +74,27 @@
         return;
       }
 
+      var shippingOptions = [{
+        id: 1234,
+        label: 'Foo Post Express',
+        amount: {currency: 'USD', value: '0.99'},
+        selected: true
+      }, {
+        id: 1235,
+        label: 'Bar Post Express',
+        amount: {currency: 'USD', value: '1.99'},
+        selected: false
+      }];
+
+      var details = {
+        total: {label: 'Total', amount: {currency: 'USD', value: '.50'}},
+        displayItems: [{
+          label: 'Sub-total',
+          amount: {currency: 'USD', value: '.50'}
+        }],
+        shippingOptions: shippingOptions
+      };
+
       var payment = new PaymentRequest(
         [
           {
@@ -93,13 +102,7 @@
                 'diners', 'jcb', 'unionpay']
           }
         ],
-        {
-          total: {label: 'Total', amount: {currency: 'USD', value: '.50'}},
-          displayItems: [{
-            label: 'Sub-total',
-            amount: {currency: 'USD', value: '.50'}
-          }]
-        },
+        details,
         {
           requestShipping: true,
           requestPayerPhone: true,
@@ -108,35 +111,26 @@
 
       payment.addEventListener('shippingaddresschange', function(evt) {
         evt.updateWith(new Promise(function(resolve) {
-          var shippingOptions = [{
-            id: 1234,
-            label: 'Foo Post Express',
-            amount: {currency: 'USD', value: '0.99'},
-            selected: true
-          }, {
-            id: 1235,
-            label: 'Bar Post Express',
-            amount: {currency: 'USD', value: '1.99'},
-            selected: false
-          }];
+          details.shippingOptions = shippingOptions;
+          _updateDetails(details);
+          resolve(details);
 
-          _updateShipping(payment.details, shippingOptions, resolve);
           // Or reject by calling the following:
-          //_updateShipping(payment.details, undefined, reject);
+          //delete details.shippingOptions;
+          //_updateDetails(details);
+          //reject(details);
         }));
       });
 
       payment.addEventListener('shippingoptionchange', function(evt) {
         evt.updateWith(new Promise(function(resolve) {
           // Update the selected shipping option.
-          for (var i in payment.details.shippingOptions) {
-            payment.details.shippingOptions[i].selected =
-                (payment.details.shippingOptions[i].id ===
-                 payment.shippingOption);
+          for (var i in details.shippingOptions) {
+            details.shippingOptions[i].selected =
+                (details.shippingOptions[i].id === payment.shippingOption);
           }
-
-          _updateShipping(payment.details, payment.details.shippingOptions,
-                          resolve);
+          _updateDetails(details);
+          resolve(details);
         }));
       });
 
