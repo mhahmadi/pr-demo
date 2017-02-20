@@ -105,8 +105,10 @@
         details,
         {
           requestShipping: true,
+          requestPayerName: true,
           requestPayerPhone: true,
-          requestPayerEmail: true
+          requestPayerEmail: true,
+          shippingType: "delivery"
         });
 
       payment.addEventListener('shippingaddresschange', function(evt) {
