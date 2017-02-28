@@ -170,8 +170,17 @@
             details.shippingOptions[i].selected =
                 (details.shippingOptions[i].id === payment.shippingOption);
           }
-          _updateDetails(details);
-          resolve(details);
+          //_updateDetails(details);
+          //resolve(details);
+          
+          window.setTimeout(function() {
+            payment.abort().then(function() {
+              _print('Payment successfully aborted');
+            }).catch(function() {
+              _print('Unable to abort, payment is in progress.');
+            });
+          }, 2 * 1000);
+          
         }));
       });
 
