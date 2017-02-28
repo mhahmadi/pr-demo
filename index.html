@@ -153,6 +153,7 @@
 
       payment.addEventListener('shippingaddresschange', function(evt) {
         evt.updateWith(new Promise(function(resolve) {
+          _print(JSON.stringify(resp, payment.shippingAddress, 2));
           details.shippingOptions = shippingOptions;
           _updateDetails(details);
           resolve(details);
