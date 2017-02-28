@@ -184,7 +184,7 @@
         window.clearTimeout(paymentTimeout);
 
         paymentResponse.complete('success').then(function() {
-          _done('Payment was successful.');
+          _done('Payment was successful.', paymentResponse);
         }).catch(function(error) {
           _print(error);
         });
