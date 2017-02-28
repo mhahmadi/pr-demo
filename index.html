@@ -40,6 +40,8 @@
         info(JSON.stringify(resp, undefined, 2));
         return;
       }
+      
+      var requestId = resp.paymentRequestID ? 'requestId: ' + resp.paymentRequestID + '<br/>' : '';
 
       var shippingOption = resp.shippingOption ?
           'shipping, delivery, pickup option: ' + resp.shippingOption + '<br/>' :
@@ -47,7 +49,7 @@
 
       var shippingAddress = resp.shippingAddress ?
           'shipping, delivery, pickup address: ' +
-              JSON.stringify(toDictionary(resp.shippingAddress), undefined, 2) +
+              JSON.stringify(resp.shippingAddress, undefined, 2) +
               '<br/>' :
           '';
 
@@ -59,7 +61,7 @@
       var phone = resp.payerPhone ? 'phone: ' + resp.payerPhone + '<br/>' : '';
       var name = resp.payerName ? 'name: ' + resp.payerName + '<br/>' : '';
 
-      _print(message + email + phone + name + shippingOption + shippingAddress + method +
+      _print(message + requestId + email + phone + name + shippingOption + shippingAddress + method +
           instrument);
     }
 
