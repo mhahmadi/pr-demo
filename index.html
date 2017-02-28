@@ -35,6 +35,9 @@
      */
     function _done(message, resp) {
       message = message + '<br/>';
+      
+      _print(resp);
+      return;
 
       if (resp.toJSON) {
         info(JSON.stringify(resp, undefined, 2));
