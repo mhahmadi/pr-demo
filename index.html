@@ -70,7 +70,7 @@
      * @param {PaymentDetails} paymentDetails
      * @private
      */
-    function _updateDetails(paymentDetails) {
+    function _updatePriceItem(paymentDetails) {
       var selectedShippingOption;
       for (var i in paymentDetails.shippingOptions) {
         if (paymentDetails.shippingOptions[i].selected) {
@@ -149,37 +149,37 @@
         });
 
       payment.addEventListener('shippingaddresschange', function(evt) {
-        evt.updateWith(new Promise(function(resolve) {
+        evt.updateWith(new Promise(function(resolve, reject) {
           _print(JSON.stringify(payment.shippingAddress, undefined, 2));
-          details.shippingOptions = shippingOptions;
-          _updateDetails(details);
-          resolve(details);
+ 
+//           details.shippingOptions = shippingOptions;
+//           _updatePriceItem(details);
+//           resolve(details);
 
-          // Or reject by calling the following:
-          //delete details.shippingOptions;
-          //_updateDetails(details);
-          //reject(details);
+          delete details.shippingOptions;
+          _updateDetails(details);
+          reject(details);
         }));
       });
 
       payment.addEventListener('shippingoptionchange', function(evt) {
-        evt.updateWith(new Promise(function(resolve) {
+        evt.updateWith(new Promise(function(resolve, reject) {
           _print(payment.shippingOption);
-          // Update the selected shipping option.
+
           for (var i in details.shippingOptions) {
             details.shippingOptions[i].selected =
                 (details.shippingOptions[i].id === payment.shippingOption);
           }
-          //_updateDetails(details);
-          //resolve(details);
+          _updatePriceItem(details);
+          resolve(details);
           
-          window.setTimeout(function() {
-            payment.abort().then(function() {
-              _print('Payment successfully aborted');
-            }).catch(function() {
-              _print('Unable to abort, payment is in progress.');
-            });
-          }, 2 * 1000);
+//           window.setTimeout(function() {
+//             payment.abort().then(function() {
+//               _print('Payment successfully aborted');
+//             }).catch(function() {
+//               _print('Unable to abort, payment is in progress.');
+//             });
+//           }, 2 * 1000);
           
         }));
       });
