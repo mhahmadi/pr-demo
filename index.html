@@ -17,193 +17,193 @@
         <span id="msg"></span>
       </div>
     </div>
-  </body>
-  <script>
-    /**
-     * Prints the message on the page.
-     * @param {string} message
-     * @private
-     */
-    function _print(message) {
-      document.getElementById('msg').innerHTML += message;
-    }
-    
-    /**
-     * Called when the payment request is complete.
-     * @param {string} message - The human readable message to display.
-     * @param {PaymentResponse} resp - The payment response.
-     */
-    function _done(message, resp) {
-      message = message + '<br/>';
-
-      if (resp.toJSON) {
-        _print(JSON.stringify(resp, undefined, 2));
-        return;
+    <script>
+      /**
+       * Prints the message on the page.
+       * @param {string} message
+       * @private
+       */
+      function _print(message) {
+        document.getElementById('msg').innerHTML += message;
       }
-      
-      var requestId = resp.paymentRequestID ? 'requestId: ' + resp.paymentRequestID + '<br/>' : '';
 
-      var shippingOption = resp.shippingOption ?
-          'shipping, delivery, pickup option: ' + resp.shippingOption + '<br/>' :
-          '';
+      /**
+       * Called when the payment request is complete.
+       * @param {string} message - The human readable message to display.
+       * @param {PaymentResponse} resp - The payment response.
+       */
+      function _done(message, resp) {
+        message = message + '<br/>';
 
-      var shippingAddress = resp.shippingAddress ?
-          'shipping, delivery, pickup address: ' +
-              JSON.stringify(resp.shippingAddress, undefined, 2) +
-              '<br/>' :
-          '';
-
-      var instrument =
-          'instrument:' + JSON.stringify(resp.details, undefined, 2) + '<br/>';
-
-      var method = 'method: ' + resp.methodName + '<br/>';
-      var email = resp.payerEmail ? 'email: ' + resp.payerEmail + '<br/>' : '';
-      var phone = resp.payerPhone ? 'phone: ' + resp.payerPhone + '<br/>' : '';
-      var name = resp.payerName ? 'name: ' + resp.payerName + '<br/>' : '';
-
-      _print(message + requestId + email + phone + name + shippingOption + shippingAddress + method +
-          instrument);
-    }
-
-    /**
-     * Updates 'total' as well as 'displayItems'.
-     * @param {PaymentDetails} paymentDetails
-     * @private
-     */
-    function _updatePriceItem(paymentDetails) {
-      var selectedShippingOption;
-      for (var i in paymentDetails.shippingOptions) {
-        if (paymentDetails.shippingOptions[i].selected) {
-          selectedShippingOption = paymentDetails.shippingOptions[i];
+        if (resp.toJSON) {
+          _print(JSON.stringify(resp, undefined, 2));
+          return;
         }
+
+        var requestId = resp.paymentRequestID ? 'requestId: ' + resp.paymentRequestID + '<br/>' : '';
+
+        var shippingOption = resp.shippingOption ?
+            'shipping, delivery, pickup option: ' + resp.shippingOption + '<br/>' :
+            '';
+
+        var shippingAddress = resp.shippingAddress ?
+            'shipping, delivery, pickup address: ' +
+                JSON.stringify(resp.shippingAddress, undefined, 2) +
+                '<br/>' :
+            '';
+
+        var instrument =
+            'instrument:' + JSON.stringify(resp.details, undefined, 2) + '<br/>';
+
+        var method = 'method: ' + resp.methodName + '<br/>';
+        var email = resp.payerEmail ? 'email: ' + resp.payerEmail + '<br/>' : '';
+        var phone = resp.payerPhone ? 'phone: ' + resp.payerPhone + '<br/>' : '';
+        var name = resp.payerName ? 'name: ' + resp.payerName + '<br/>' : '';
+
+        _print(message + requestId + email + phone + name + shippingOption + shippingAddress + method +
+            instrument);
       }
 
-      var subtotal = 0.50;
-      var total = subtotal;
-      if (selectedShippingOption) {
-        var shippingPrice = Number(selectedShippingOption.amount.value);
-        total = subtotal + shippingPrice;
-      }
-      paymentDetails.total = {
-        label: 'Total',
-        amount: {currency: 'USD', value: total.toFixed(2)}
-      };
-
-      paymentDetails.displayItems = [
-        {
-          label: 'Sub-total',
-          amount: {currency: 'USD', value: subtotal.toFixed(2)}
+      /**
+       * Updates 'total' as well as 'displayItems'.
+       * @param {PaymentDetails} paymentDetails
+       * @private
+       */
+      function _updatePriceItem(paymentDetails) {
+        var selectedShippingOption;
+        for (var i in paymentDetails.shippingOptions) {
+          if (paymentDetails.shippingOptions[i].selected) {
+            selectedShippingOption = paymentDetails.shippingOptions[i];
+          }
         }
-      ];
-      if (selectedShippingOption) {
-        paymentDetails.displayItems.splice(0, 0, selectedShippingOption);
-      }
-    }
 
-    /**
-     * Starts Payment Request.
-     */
-    function buy() {
-      document.getElementById('msg').innerHTML = '';
+        var subtotal = 0.50;
+        var total = subtotal;
+        if (selectedShippingOption) {
+          var shippingPrice = Number(selectedShippingOption.amount.value);
+          total = subtotal + shippingPrice;
+        }
+        paymentDetails.total = {
+          label: 'Total',
+          amount: {currency: 'USD', value: total.toFixed(2)}
+        };
 
-      if (!window.PaymentRequest) {
-        _print('PaymentRequest not supported.');
-        return;
-      }
-
-      var shippingOptions = [{
-        id: "1234",
-        label: 'Foo Post Express',
-        amount: {currency: 'USD', value: '0.99'},
-        selected: true
-      }, {
-        id: "1235",
-        label: 'Bar Post Express',
-        amount: {currency: 'USD', value: '1.99'},
-        selected: false
-      }];
-
-      var details = {
-        total: {label: 'Total', amount: {currency: 'USD', value: '.50'}},
-        displayItems: [{
-          label: 'Sub-total',
-          amount: {currency: 'USD', value: '.50'}
-        }],
-        shippingOptions: shippingOptions
-      };
-
-      var payment = new PaymentRequest(
-        [
+        paymentDetails.displayItems = [
           {
-            supportedMethods: ['visa', 'mastercard', 'amex', 'discover',
-                'diners', 'jcb', 'unionpay']
+            label: 'Sub-total',
+            amount: {currency: 'USD', value: subtotal.toFixed(2)}
           }
-        ],
-        details,
-        {
-          requestShipping: true,
-          requestPayerName: true,
-          requestPayerPhone: true,
-          requestPayerEmail: true,
-          shippingType: "delivery"
+        ];
+        if (selectedShippingOption) {
+          paymentDetails.displayItems.splice(0, 0, selectedShippingOption);
+        }
+      }
+
+      /**
+       * Starts Payment Request.
+       */
+      function buy() {
+        document.getElementById('msg').innerHTML = '';
+
+        if (!window.PaymentRequest) {
+          _print('PaymentRequest not supported.');
+          return;
+        }
+
+        var shippingOptions = [{
+          id: "1234",
+          label: 'Foo Post Express',
+          amount: {currency: 'USD', value: '0.99'},
+          selected: true
+        }, {
+          id: "1235",
+          label: 'Bar Post Express',
+          amount: {currency: 'USD', value: '1.99'},
+          selected: false
+        }];
+
+        var details = {
+          total: {label: 'Total', amount: {currency: 'USD', value: '.50'}},
+          displayItems: [{
+            label: 'Sub-total',
+            amount: {currency: 'USD', value: '.50'}
+          }],
+          shippingOptions: shippingOptions
+        };
+
+        var payment = new PaymentRequest(
+          [
+            {
+              supportedMethods: ['visa', 'mastercard', 'amex', 'discover',
+                  'diners', 'jcb', 'unionpay']
+            }
+          ],
+          details,
+          {
+            requestShipping: true,
+            requestPayerName: true,
+            requestPayerPhone: true,
+            requestPayerEmail: true,
+            shippingType: "delivery"
+          });
+
+        payment.addEventListener('shippingaddresschange', function(evt) {
+          evt.updateWith(new Promise(function(resolve, reject) {
+            _print(JSON.stringify(payment.shippingAddress, undefined, 2));
+
+  //           details.shippingOptions = shippingOptions;
+  //           _updatePriceItem(details);
+  //           resolve(details);
+
+            delete details.shippingOptions;
+            _updateDetails(details);
+            reject(details);
+          }));
         });
 
-      payment.addEventListener('shippingaddresschange', function(evt) {
-        evt.updateWith(new Promise(function(resolve, reject) {
-          _print(JSON.stringify(payment.shippingAddress, undefined, 2));
- 
-//           details.shippingOptions = shippingOptions;
-//           _updatePriceItem(details);
-//           resolve(details);
+        payment.addEventListener('shippingoptionchange', function(evt) {
+          evt.updateWith(new Promise(function(resolve, reject) {
+            _print(payment.shippingOption);
 
-          delete details.shippingOptions;
-          _updateDetails(details);
-          reject(details);
-        }));
-      });
+            for (var i in details.shippingOptions) {
+              details.shippingOptions[i].selected =
+                  (details.shippingOptions[i].id === payment.shippingOption);
+            }
+            _updatePriceItem(details);
+            resolve(details);
 
-      payment.addEventListener('shippingoptionchange', function(evt) {
-        evt.updateWith(new Promise(function(resolve, reject) {
-          _print(payment.shippingOption);
+  //           window.setTimeout(function() {
+  //             payment.abort().then(function() {
+  //               _print('Payment successfully aborted');
+  //             }).catch(function() {
+  //               _print('Unable to abort, payment is in progress.');
+  //             });
+  //           }, 2 * 1000);
 
-          for (var i in details.shippingOptions) {
-            details.shippingOptions[i].selected =
-                (details.shippingOptions[i].id === payment.shippingOption);
-          }
-          _updatePriceItem(details);
-          resolve(details);
-          
-//           window.setTimeout(function() {
-//             payment.abort().then(function() {
-//               _print('Payment successfully aborted');
-//             }).catch(function() {
-//               _print('Unable to abort, payment is in progress.');
-//             });
-//           }, 2 * 1000);
-          
-        }));
-      });
-
-      var paymentTimeout = window.setTimeout(function() {
-        window.clearTimeout(paymentTimeout);
-        payment.abort().then(function() {
-          _print('Payment timed out after 20 minutes.');
-        }).catch(function() {
-          _print('Unable to abort, payment is in progress.');
+          }));
         });
-      }, 20 * 60 * 1000);  /* 20 minutes */
 
-      payment.show().then(function(paymentResponse) {
-        window.clearTimeout(paymentTimeout);
+        var paymentTimeout = window.setTimeout(function() {
+          window.clearTimeout(paymentTimeout);
+          payment.abort().then(function() {
+            _print('Payment timed out after 20 minutes.');
+          }).catch(function() {
+            _print('Unable to abort, payment is in progress.');
+          });
+        }, 20 * 60 * 1000);  /* 20 minutes */
 
-        paymentResponse.complete('success').then(function() {
-          _done('Payment was successful.', paymentResponse);
+        payment.show().then(function(paymentResponse) {
+          window.clearTimeout(paymentTimeout);
+
+          paymentResponse.complete('success').then(function() {
+            _done('Payment was successful.', paymentResponse);
+          }).catch(function(error) {
+            _print(error);
+          });
         }).catch(function(error) {
           _print(error);
         });
-      }).catch(function(error) {
-        _print(error);
-      });
-    }
-  </script>
+      }
+    </script>
+  </body>
 </html>
