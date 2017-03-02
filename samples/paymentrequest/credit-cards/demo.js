@@ -91,8 +91,8 @@ const button = document.getElementById('buyButton');
 //  let request = initPaymentRequest();
   button.setAttribute('style', 'display: inline;');
   button.addEventListener('click', function() {
+    let request = initPaymentRequest();
     onBuyClicked(request);
-    request = initPaymentRequest();
   });
 // } else {
 //   ChromeSamples.setStatus('This browser does not support web payments');
