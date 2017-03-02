@@ -98,9 +98,7 @@ function instrumentToJsonString(instrument) {
 
 const button = document.getElementById('buyButton');
 button.setAttribute('style', 'display: none;');
-if (!navigator.userAgent.match(/Android/i)) {
-  ChromeSamples.setStatus('Supported only on Android for now.');
-} else if ('PaymentRequest' in window) {
+if ('PaymentRequest' in window) {
   let request = initPaymentRequest();
   button.setAttribute('style', 'display: inline;');
   button.addEventListener('click', function() {
