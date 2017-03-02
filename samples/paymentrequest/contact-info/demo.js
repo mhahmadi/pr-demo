@@ -96,14 +96,14 @@ function instrumentToJsonString(instrument) {
   }, undefined, 2);
 }
 
-let buyButton = document.getElementById('buyButton');
-buyButton.setAttribute('style', 'display: none;');
+const button = document.getElementById('buyButton');
+button.setAttribute('style', 'display: none;');
 if (!navigator.userAgent.match(/Android/i)) {
   ChromeSamples.setStatus('Supported only on Android for now.');
 } else if ('PaymentRequest' in window) {
   let request = initPaymentRequest();
-  buyButton.setAttribute('style', 'display: inline;');
-  buyButton.addEventListener('click', function() {
+  button.setAttribute('style', 'display: inline;');
+  button.addEventListener('click', function() {
     onBuyClicked(request);
     request = initPaymentRequest();
   });
