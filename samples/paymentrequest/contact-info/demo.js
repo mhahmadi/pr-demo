@@ -96,7 +96,7 @@ function instrumentToJsonString(instrument) {
   }, undefined, 2);
 }
 
-const buyButton = document.getElementById('buyButton');
+let buyButton = document.getElementById('buyButton');
 buyButton.setAttribute('style', 'display: none;');
 if (!navigator.userAgent.match(/Android/i)) {
   ChromeSamples.setStatus('Supported only on Android for now.');
