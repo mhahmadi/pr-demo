@@ -4,6 +4,9 @@
  * @return {PaymentRequest} The PaymentRequest oject.
  */
 function initPaymentRequest() {
+  if (!window.PaymentRequest)
+    ChromeSamples.setStatus('This browser does not support web payments');
+  
   let networks = ['amex', 'diners', 'discover', 'jcb', 'mastercard', 'unionpay',
       'visa', 'mir'];
   let types = ['debit', 'credit', 'prepaid'];
@@ -85,15 +88,12 @@ function instrumentToJsonString(instrument) {
   }, undefined, 2);
 }
 
-const button = document.getElementById('buyButton');
-// button.setAttribute('style', 'display: none;');
-// if (window.PaymentRequest) {
-//  let request = initPaymentRequest();
-  button.setAttribute('style', 'display: inline;');
-  button.addEventListener('click', function() {
-    let request = initPaymentRequest();
-    onBuyClicked(request);
-  });
-// } else {
-//   ChromeSamples.setStatus('This browser does not support web payments');
-// }
+if (!window.PaymentRequest)
+  ChromeSamples.setStatus('This browser does not support web payments');
+
+let button = document.getElementById('buyButton');
+button.setAttribute('style', 'display: inline;');
+button.addEventListener('click', function() {
+  let request = initPaymentRequest();
+  onBuyClicked(request);
+});
