@@ -87,13 +87,13 @@ function instrumentToJsonString(instrument) {
 
 const button = document.getElementById('buyButton');
 button.setAttribute('style', 'display: none;');
-if (window.PaymentRequest) {
+// if (window.PaymentRequest) {
   let request = initPaymentRequest();
   button.setAttribute('style', 'display: inline;');
   button.addEventListener('click', function() {
     onBuyClicked(request);
     request = initPaymentRequest();
   });
-} else {
-  ChromeSamples.setStatus('This browser does not support web payments');
-}
+// } else {
+//   ChromeSamples.setStatus('This browser does not support web payments');
+// }
