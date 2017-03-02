@@ -86,9 +86,9 @@ function instrumentToJsonString(instrument) {
 }
 
 const button = document.getElementById('buyButton');
-button.setAttribute('style', 'display: none;');
+// button.setAttribute('style', 'display: none;');
 // if (window.PaymentRequest) {
-  let request = initPaymentRequest();
+//  let request = initPaymentRequest();
   button.setAttribute('style', 'display: inline;');
   button.addEventListener('click', function() {
     onBuyClicked(request);
