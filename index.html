@@ -103,6 +103,11 @@
        * Starts Payment Request.
        */
       function buy() {
+        if (!'PaymentRequest' in window)
+          _print('PaymentRequest is not available yet');
+          return;
+        }
+
         document.getElementById('msg').innerHTML = '';
 
         if (!window.PaymentRequest) {
@@ -204,6 +209,9 @@
           _print(error);
         });
       }
+      
+      if (!'PaymentRequest' in window)
+        _print('PaymentRequest is not available yet');
     </script>
   </body>
 </html>
