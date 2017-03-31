@@ -151,13 +151,13 @@
           evt.updateWith(new Promise(function(resolve, reject) {
             _print(JSON.stringify(payment.shippingAddress, undefined, 2));
 
-  //           details.shippingOptions = shippingOptions;
-  //           _updatePriceItem(details);
-  //           resolve(details);
+            details.shippingOptions = shippingOptions;
+            _updatePriceItem(details);
+            resolve(details);
 
-            delete details.shippingOptions;
-            _updateDetails(details);
-            reject(details);
+//             delete details.shippingOptions;
+//             _updateDetails(details);
+//             reject(details);
           }));
         });
 
