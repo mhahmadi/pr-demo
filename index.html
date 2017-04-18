@@ -156,8 +156,8 @@
           evt.updateWith(new Promise(function(resolve, reject) {
             _print(JSON.stringify(payment.shippingAddress, undefined, 2));
 
-            //details.shippingOptions = shippingOptions;
-            delete details.shippingOptions;
+            details.shippingOptions = shippingOptions;
+//             delete details.shippingOptions;
             _updatePriceItem(details);
             resolve(details);
 
